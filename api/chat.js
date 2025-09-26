@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`, // Vercel 환경 변수
+        "Authorization": `Bearer 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}`, // Vercel 환경 변수
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
