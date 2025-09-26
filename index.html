@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatGPT 운동치료 결과</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    fieldset { width: 350px; padding: 15px; }
+    label { display: block; margin-top: 10px; }
+    input[type="text"] { width: 95%; padding: 5px; }
+    button { margin-top: 15px; padding: 8px 15px; }
+    #result { margin-top: 25px; padding: 15px; border: 1px solid #ccc; white-space: pre-line; }
+  </style>
+</head>
+<body>
+  <h2>ChatGPT를 활용한 운동치료법 연구</h2>
+  
+  <!-- 입력 폼 -->
+  <form id="chatForm">
+    <fieldset>
+      <legend>환자 정보 입력</legend>
+      
+      <label for="age">나이</label>
+      <input type="text" id="age" name="age_id" required />
+
+      <label>성별</label>
+      <input type="radio" name="sex_id" value="남" required> 남
+      <input type="radio" name="sex_id" value="여"> 여
+
+      <label for="pain">통증부위 및 질병명</label>
+      <input type="text" id="pain" name="pain_id" required />
+
+      <button type="submit">ChatGPT에 요청</button>
+      <button type="reset">취소</button>
+    </fieldset>
+  </form>
+
+  <!-- 결과 표시 영역 -->
+  <div id="result">여기에 ChatGPT 결과가 표시됩니다.</div>
+
+  <script>
+    const form = document.getElementById("chatForm");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const age = document.getElementById("age").value;
+      const sex = document.querySelector('input[name="sex_id"]:checked')?.value;
+      const pain = document.getElementById("pain").value;
+
+      const prompt = `환자 정보: 나이=${age}, 성별=${sex}, 통증부위=${pain}.
+      위 환자에게 적합한 운동치료법을 단계별로 설명해줘.`;
+
+      document.getElementById("result").innerText = "ChatGPT에게 요청 중...";
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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" // ⚠️ 실제 발급받은 API Key 넣기
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini", // ⚠️ 모델이 안 되면 "gpt-4o" 또는 "gpt-3.5-turbo" 시도
+            messages: [{ role: "user", content: prompt }]
+          })
+        });
+
+        const data = await response.json();
+        console.log("📌 ChatGPT 원본 응답:", data); // 👉 F12 콘솔에서 확인
+
+        if (data.error) {
+          document.getElementById("result").innerText = "에러: " + data.error.message;
+        } else if (data.choices && data.choices.length > 0) {
+          document.getElementById("result").innerText = data.choices[0].message.content;
+        } else {
+          document.getElementById("result").innerText = "ChatGPT 응답이 비어 있습니다.";
+        }
+
+      } catch (error) {
+        console.error("⚠️ fetch 에러:", error);
+        document.getElementById("result").innerText = "에러 발생: " + error;
+      }
+    });
+  </script>
+</body>
+</html>
