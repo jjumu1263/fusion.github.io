@@ -2,21 +2,40 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>ChatGPT + Google 요약</title>
+  <title>ChatGPT + Google 운동치료 요약</title>
   <style>
     body { font-family: Arial; margin: 20px; display: flex; }
     #inputSection { width: 40%; }
     #resultSection { width: 55%; margin-left: 5%; }
-    textarea { width: 100%; height: 100px; }
+    fieldset { padding: 15px; }
+    label { display: block; margin-top: 10px; }
+    input[type="text"] { width: 95%; padding: 5px; }
+    button { margin-top: 15px; padding: 8px 15px; }
     #googleResults, #chatResult { margin-top: 10px; padding: 10px; border: 1px solid #ccc; white-space: pre-line; }
   </style>
 </head>
 <body>
 
 <div id="inputSection">
-  <h3>검색어 입력</h3>
-  <textarea id="query"></textarea>
-  <button id="searchBtn">검색 + 요약</button>
+  <h3>환자 정보 입력</h3>
+  <form id="chatForm">
+    <fieldset>
+      <legend>환자 정보</legend>
+
+      <label for="age">나이</label>
+      <input type="text" id="age" name="age_id" required />
+
+      <label>성별</label>
+      <input type="radio" name="sex_id" value="남" required> 남
+      <input type="radio" name="sex_id" value="여"> 여
+
+      <label for="pain">통증부위 및 질병명</label>
+      <input type="text" id="pain" name="pain_id" required />
+
+      <button type="submit">검색 + 요약</button>
+      <button type="reset">취소</button>
+    </fieldset>
+  </form>
 </div>
 
 <div id="resultSection">
@@ -27,36 +46,39 @@
 </div>
 
 <script>
-  const searchBtn = document.getElementById("searchBtn");
+  const form = document.getElementById("chatForm");
 
-  searchBtn.addEventListener("click", async () => {
-    const query = document.getElementById("query").value;
-    if (!query) return alert("검색어를 입력하세요.");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const age = document.getElementById("age").value;
+    const sex = document.querySelector('input[name="sex_id"]:checked')?.value;
+    const pain = document.getElementById("pain").value;
+
+    const searchQuery = `${age}세 ${sex} 환자, 통증부위/질병: ${pain}`;
 
     document.getElementById("googleResults").innerText = "검색 중...";
     document.getElementById("chatResult").innerText = "요약 준비 중...";
 
     try {
-      // 1️⃣ Google 검색 API 호출
+      // 1️⃣ Google 검색
       const googleRes = await fetch("/api/googleSearch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ query: searchQuery })
       });
       const googleData = await googleRes.json();
-
-      // 검색 결과 텍스트만 추출
       const items = googleData.items || [];
       const snippets = items.map(item => `${item.title}\n${item.snippet}\n${item.link}`).join("\n\n");
       document.getElementById("googleResults").innerText = snippets || "검색 결과가 없습니다.";
 
-      // 2️⃣ ChatGPT API 호출 (요약)
+      // 2️⃣ ChatGPT 요약
+      const chatPrompt = `다음 검색 결과를 한국어로 요약하고 운동치료 관련 조언을 단계별로 알려줘:\n\n${snippets}`;
       const chatRes = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: `다음 검색 결과를 한국어로 정리해서 요약해줘:\n\n${snippets}` })
+        body: JSON.stringify({ prompt: chatPrompt })
       });
-
       const chatData = await chatRes.json();
       if (chatData.choices?.length > 0) {
         document.getElementById("chatResult").innerText = chatData.choices[0].message.content;
