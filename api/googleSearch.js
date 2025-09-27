@@ -6,7 +6,9 @@ export default async function handler(req, res) {
   const { query } = req.body;
 
   try {
-    const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CX}&q=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CX}&q=${encodeURIComponent(query)}`
+    );
     const data = await response.json();
     res.status(200).json(data);
   } catch (err) {
