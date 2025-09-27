@@ -40,9 +40,9 @@
 </div>
 
 <div id="resultSection">
-  <h3>Google 검색 요약</h3>
+  <h3>검색 요약 (Google 검색 + GPT 요약)</h3>
   <div id="searchSummary">검색 요약이 여기에 표시됩니다.</div>
-  <h3>운동치료 단계</h3>
+  <h3>운동치료 단계 (환자 맞춤)</h3>
   <div id="treatmentSteps">운동치료 단계가 여기에 표시됩니다.</div>
 </div>
 
@@ -58,7 +58,7 @@ form.addEventListener("submit", async (e) => {
 
   const searchQuery = `${age}세 ${sex} 환자, 통증부위/질병: ${pain}, 운동치료 관련 정보`;
 
-  document.getElementById("searchSummary").innerText = "검색 요약 중...";
+  document.getElementById("searchSummary").innerText = "검색 요약 생성 중...";
   document.getElementById("treatmentSteps").innerText = "운동치료 단계 생성 중...";
 
   try {
@@ -72,8 +72,8 @@ form.addEventListener("submit", async (e) => {
     const items = googleData.items || [];
     const snippets = items.map(item => `${item.title}\n${item.snippet}`).join("\n\n");
 
-    // 2️⃣ ChatGPT로 검색 요약
-    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약해서 치료 정보 중심으로 정리해줘:\n\n${snippets}`;
+    // 2️⃣ GPT 요약: Google 검색 결과 요약
+    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 운동치료와 관련된 정보만 정리해줘:\n\n${snippets}`;
     const summaryRes = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -83,7 +83,7 @@ form.addEventListener("submit", async (e) => {
     const summaryText = summaryData.choices?.[0]?.message?.content || "검색 요약이 없습니다.";
     document.getElementById("searchSummary").innerText = summaryText;
 
-    // 3️⃣ 기존 운동치료 단계
+    // 3️⃣ GPT 운동치료: 환자 맞춤 단계별 운동법
     const treatmentPrompt = `환자 정보: 나이=${age}, 성별=${sex}, 통증부위=${pain}. 위 환자에게 적합한 운동치료법을 단계별로 구체적으로 설명해줘.`;
     const treatmentRes = await fetch("/api/chat", {
       method: "POST",
