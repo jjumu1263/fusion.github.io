@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>ChatGPT + Google 운동치료 요약</title>
+  <title>운동치료 + 검색 요약</title>
   <style>
     body { font-family: Arial; margin: 20px; display: flex; }
     #inputSection { width: 40%; }
@@ -11,7 +11,8 @@
     label { display: block; margin-top: 10px; }
     input[type="text"] { width: 95%; padding: 5px; }
     button { margin-top: 15px; padding: 8px 15px; }
-    #googleResults, #chatResult { margin-top: 10px; padding: 10px; border: 1px solid #ccc; white-space: pre-line; }
+    #searchSummary, #treatmentSteps { margin-top: 10px; padding: 10px; border: 1px solid #ccc; white-space: pre-line; }
+    h3 { margin-bottom: 5px; }
   </style>
 </head>
 <body>
@@ -32,65 +33,72 @@
       <label for="pain">통증부위 및 질병명</label>
       <input type="text" id="pain" name="pain_id" required />
 
-      <button type="submit">검색 + 요약</button>
+      <button type="submit">검색 + 요약 + 운동치료</button>
       <button type="reset">취소</button>
     </fieldset>
   </form>
 </div>
 
 <div id="resultSection">
-  <h3>Google 검색 결과</h3>
-  <div id="googleResults">검색 결과가 여기에 표시됩니다.</div>
-  <h3>ChatGPT 요약</h3>
-  <div id="chatResult">요약 결과가 여기에 표시됩니다.</div>
+  <h3>Google 검색 요약</h3>
+  <div id="searchSummary">검색 요약이 여기에 표시됩니다.</div>
+  <h3>운동치료 단계</h3>
+  <div id="treatmentSteps">운동치료 단계가 여기에 표시됩니다.</div>
 </div>
 
 <script>
-  const form = document.getElementById("chatForm");
+const form = document.getElementById("chatForm");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const age = document.getElementById("age").value;
-    const sex = document.querySelector('input[name="sex_id"]:checked')?.value;
-    const pain = document.getElementById("pain").value;
+  const age = document.getElementById("age").value;
+  const sex = document.querySelector('input[name="sex_id"]:checked')?.value;
+  const pain = document.getElementById("pain").value;
 
-    const searchQuery = `${age}세 ${sex} 환자, 통증부위/질병: ${pain}`;
+  const searchQuery = `${age}세 ${sex} 환자, 통증부위/질병: ${pain}, 운동치료 관련 정보`;
 
-    document.getElementById("googleResults").innerText = "검색 중...";
-    document.getElementById("chatResult").innerText = "요약 준비 중...";
+  document.getElementById("searchSummary").innerText = "검색 요약 중...";
+  document.getElementById("treatmentSteps").innerText = "운동치료 단계 생성 중...";
 
-    try {
-      // 1️⃣ Google 검색
-      const googleRes = await fetch("/api/googleSearch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery })
-      });
-      const googleData = await googleRes.json();
-      const items = googleData.items || [];
-      const snippets = items.map(item => `${item.title}\n${item.snippet}\n${item.link}`).join("\n\n");
-      document.getElementById("googleResults").innerText = snippets || "검색 결과가 없습니다.";
+  try {
+    // 1️⃣ Google 검색
+    const googleRes = await fetch("/api/googleSearch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: searchQuery })
+    });
+    const googleData = await googleRes.json();
+    const items = googleData.items || [];
+    const snippets = items.map(item => `${item.title}\n${item.snippet}`).join("\n\n");
 
-      // 2️⃣ ChatGPT 요약
-      const chatPrompt = `다음 검색 결과를 한국어로 요약하고 운동치료 관련 조언을 단계별로 알려줘:\n\n${snippets}`;
-      const chatRes = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: chatPrompt })
-      });
-      const chatData = await chatRes.json();
-      if (chatData.choices?.length > 0) {
-        document.getElementById("chatResult").innerText = chatData.choices[0].message.content;
-      } else {
-        document.getElementById("chatResult").innerText = "ChatGPT 요약이 없습니다.";
-      }
+    // 2️⃣ ChatGPT로 검색 요약
+    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약해서 치료 정보 중심으로 정리해줘:\n\n${snippets}`;
+    const summaryRes = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: summaryPrompt })
+    });
+    const summaryData = await summaryRes.json();
+    const summaryText = summaryData.choices?.[0]?.message?.content || "검색 요약이 없습니다.";
+    document.getElementById("searchSummary").innerText = summaryText;
 
-    } catch (err) {
-      document.getElementById("googleResults").innerText = "검색 에러: " + err;
-      document.getElementById("chatResult").innerText = "ChatGPT 요약 에러: " + err;
-    }
-  });
+    // 3️⃣ 기존 운동치료 단계
+    const treatmentPrompt = `환자 정보: 나이=${age}, 성별=${sex}, 통증부위=${pain}. 위 환자에게 적합한 운동치료법을 단계별로 구체적으로 설명해줘.`;
+    const treatmentRes = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: treatmentPrompt })
+    });
+    const treatmentData = await treatmentRes.json();
+    const treatmentText = treatmentData.choices?.[0]?.message?.content || "운동치료 단계가 없습니다.";
+    document.getElementById("treatmentSteps").innerText = treatmentText;
+
+  } catch (err) {
+    document.getElementById("searchSummary").innerText = "검색 요약 에러: " + err;
+    document.getElementById("treatmentSteps").innerText = "운동치료 단계 에러: " + err;
+  }
+});
 </script>
 
 </body>
