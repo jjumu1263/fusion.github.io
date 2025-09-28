@@ -27,6 +27,7 @@
     .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
     /* 복사 알림 (작게) */
     .small-msg { position: absolute; top: 8px; right: 12px; background:#000; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; display:none; }
+    .error { color: red; white-space: normal; }
   </style>
 </head>
 <body>
@@ -114,6 +115,19 @@
 </div>
 
 <script>
+/*
+  주의: 아래 API_BASE 설정을 실제 환경에 맞게 바꿔주세요.
+  - Vercel에서 이 HTML을 호스팅하면 API_BASE='' (상대경로)로 동작합니다.
+  - GitHub Pages나 로컬에서 페이지를 띄우면 자동으로 Vercel 도메인을 사용합니다.
+*/
+const API_BASE = (function(){
+  // 자동 탐지: 로컬/버셀 환경이면 상대경로 사용, 그 외(예: github.io)면 Vercel URL 입력
+  const host = window.location.hostname;
+  if (host.includes('vercel.app') || host === 'localhost' || host === '127.0.0.1') return '';
+  // *** 여기를 본인 Vercel 프로젝트 도메인으로 바꿔주세요 ***
+  return 'https://YOUR-VERCEL-PROJECT.vercel.app';
+})();
+
 const form = document.getElementById("chatForm");
 const searchSummaryEl = document.getElementById("searchSummary");
 const treatmentStepsEl = document.getElementById("treatmentSteps");
@@ -126,11 +140,10 @@ function showTempMsg(msgEl, duration = 2000) {
   setTimeout(() => { msgEl.style.display = "none"; }, duration);
 }
 
-// 복사 버튼 기능
+// 복사 버튼 기능 (unchanged)
 copyBtn.addEventListener("click", async () => {
   const text = treatmentStepsEl.innerText;
   if (!text || text.trim() === "" || text.includes("스트레칭 단계가 여기에")) {
-    // 복사할 내용이 없을 때
     copyStatus.style.color = "red";
     copyStatus.innerText = "복사할 내용이 없습니다";
     copyStatus.style.display = "inline";
@@ -142,7 +155,6 @@ copyBtn.addEventListener("click", async () => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(text);
     } else {
-      // fallback
       const textarea = document.createElement("textarea");
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -153,10 +165,10 @@ copyBtn.addEventListener("click", async () => {
     copyStatus.style.color = "green";
     copyStatus.innerText = "복사 완료";
     copyStatus.style.display = "inline";
-    // 작은 안내 메시지 카드에 잠깐 표시
     copyMsg.style.display = "block";
     setTimeout(() => { copyStatus.style.display = "none"; copyMsg.style.display = "none"; }, 1800);
   } catch (err) {
+    console.error("Copy failed:", err);
     copyStatus.style.color = "red";
     copyStatus.innerText = "복사 실패";
     copyStatus.style.display = "inline";
@@ -164,23 +176,29 @@ copyBtn.addEventListener("click", async () => {
   }
 });
 
-// 폼 제출 로직 (Google 검색 + GPT 요약 + GPT 스트레칭)
+// 폼 제출 로직 (디버깅 로그와 응답 상태 체크 포함)
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const sex = document.querySelector('input[name="sex_id"]:checked')?.value;
-  const age = document.getElementById("age").value;
-  const height = document.getElementById("height").value;
-  const weight = document.getElementById("weight").value;
-  const job = document.getElementById("job").value;
-  const pain = document.getElementById("pain").value;
-  const painDesc = document.getElementById("painDesc").value;
-  const stress = document.getElementById("stress").value;
-  const fatigue = document.getElementById("fatigue").value;
-  const painLevel = document.getElementById("painLevel").value || document.getElementById("painLevelCustom").value;
-  const disease = document.getElementById("disease").value || "없음";
-  const device = document.getElementById("device").value || "미확인";
-  const deviceList = document.getElementById("deviceList").value || "없음";
+  // 안전하게 요소 읽기 (null 체크)
+  const sex = document.querySelector('input[name="sex_id"]:checked')?.value || '';
+  const age = document.getElementById("age")?.value || '';
+  const height = document.getElementById("height")?.value || '';
+  const weight = document.getElementById("weight")?.value || '';
+  const job = document.getElementById("job")?.value || '';
+  const pain = document.getElementById("pain")?.value || '';
+  const painDesc = document.getElementById("painDesc")?.value || '';
+  const stress = document.getElementById("stress")?.value || '';
+  const fatigue = document.getElementById("fatigue")?.value || '';
+  // painLevel 요소는 예전 코드와 달라지면 null일 수 있으니 두개 모두 체크
+  const painLevelEl = document.getElementById("painLevel");
+  const painLevelCustomEl = document.getElementById("painLevelCustom");
+  const painLevel = (painLevelEl && painLevelEl.value.trim()) ? painLevelEl.value.trim() : ((painLevelCustomEl && painLevelCustomEl.value.trim()) ? painLevelCustomEl.value.trim() : '');
+  const disease = document.getElementById("disease")?.value || "없음";
+  const device = document.getElementById("device")?.value || "미확인";
+  const deviceList = document.getElementById("deviceList")?.value || "없음";
+
+  console.log("form submit data", { sex, age, height, weight, job, pain, painDesc, stress, fatigue, painLevel, disease, device, deviceList });
 
   const searchQuery = `${age}세 ${sex} 환자, ${pain} 운동치료 스트레칭 재활 추천`;
 
@@ -189,22 +207,31 @@ form.addEventListener("submit", async (e) => {
 
   try {
     // 1) Google 검색
-    const googleRes = await fetch("/api/googleSearch", {
+    const googleRes = await fetch(`${API_BASE}/api/googleSearch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: searchQuery })
     });
+    if (!googleRes.ok) {
+      const txt = await googleRes.text();
+      throw new Error(`GoogleSearch API 오류: ${googleRes.status} ${txt}`);
+    }
     const googleData = await googleRes.json();
     const items = googleData.items || [];
     const snippets = items.map(item => `${item.title}\n${item.snippet}`).join("\n\n");
+    console.log("google snippets:", snippets);
 
     // 2) GPT 요약(검색결과 요약)
     const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 근골격계 환자의 운동/재활/스트레칭과 관련된 정보만 정리해줘:\n\n${snippets}`;
-    const summaryRes = await fetch("/api/chat", {
+    const summaryRes = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: summaryPrompt })
     });
+    if (!summaryRes.ok) {
+      const txt = await summaryRes.text();
+      throw new Error(`Chat summary API 오류: ${summaryRes.status} ${txt}`);
+    }
     const summaryData = await summaryRes.json();
     const summaryText = summaryData.choices?.[0]?.message?.content || "검색 요약이 없습니다.";
     searchSummaryEl.innerText = summaryText;
@@ -234,24 +261,28 @@ form.addEventListener("submit", async (e) => {
 3) 가능한 한 의학적 근거(논문/가이드라인/학회 권고 등)와 출처를 함께 제시하라.
 4) 통증을 악화시킬 수 있는 행동(금기)과 즉시 중단해야 하는 징후를 명확히 적어라.
 5) 사용자의 반응(통증 악화, 새로운 통증 등)에 따라 다음 추천을 어떻게 바꿀지 간단한 안내도 포함하라.`;
-    
-    const treatmentRes = await fetch("/api/chat", {
+
+    const treatmentRes = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: treatmentPrompt })
     });
+    if (!treatmentRes.ok) {
+      const txt = await treatmentRes.text();
+      throw new Error(`Chat treatment API 오류: ${treatmentRes.status} ${txt}`);
+    }
     const treatmentData = await treatmentRes.json();
     const treatmentText = treatmentData.choices?.[0]?.message?.content || "스트레칭 단계가 없습니다.";
     treatmentStepsEl.innerText = treatmentText;
 
   } catch (err) {
-    searchSummaryEl.innerText = "검색 요약 에러: " + err;
-    treatmentStepsEl.innerText = "스트레칭 추천 에러: " + err;
+    console.error("처리 중 에러:", err);
+    // 화면에 친절하게 표시
+    searchSummaryEl.innerHTML = `<span class="error">검색 요약 에러: ${err.message || err}</span>`;
+    treatmentStepsEl.innerHTML = `<span class="error">스트레칭 추천 에러: ${err.message || err}</span>`;
   }
 });
 </script>
 
 </body>
 </html>
-
-
