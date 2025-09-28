@@ -1,125 +1,183 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>운동치료 + 검색 요약</title>
   <style>
-    body { font-family: Arial; margin: 20px; display: flex; }
+    body { font-family: Arial; margin: 20px; }
+    .container { display: flex; gap: 20px; }
     #inputSection { width: 40%; }
-    #resultSection { width: 55%; margin-left: 5%; }
+    #resultSection { width: 55%; display: flex; flex-direction: column; gap: 15px; }
     fieldset { padding: 15px; }
     label { display: block; margin-top: 10px; }
-    input[type="text"] { width: 95%; padding: 5px; }
-    button { margin-top: 15px; padding: 8px 15px; }
-    #searchSummary, #treatmentSteps { margin-top: 10px; padding: 10px; border: 1px solid #ccc; white-space: pre-line; }
+    input[type="text"], input[type="number"] { width: 95%; padding: 5px; }
+    button { margin-top: 15px; padding: 8px 15px; cursor: pointer; }
+    .card { padding: 15px; border: 1px solid #ccc; border-radius: 10px; white-space: pre-line; max-height: 350px; overflow-y: auto; position: relative; }
+    .card-header { display:flex; align-items:center; justify-content: space-between; gap:10px; }
+    .copy-btn { font-size: 14px; padding: 6px 10px; }
+    .copy-status { font-size: 13px; color: green; margin-left: 8px; display: none; }
     h3 { margin-bottom: 5px; }
-
-    /* ✅ 커스텀 툴팁 스타일 */
-    .tooltip-container {
-      position: relative;
-      display: inline-block;
-      width: 95%;
-    }
+    /* 툴팁 스타일 */
+    .tooltip-container { position: relative; display: inline-block; width: 95%; }
     .tooltip-container .tooltip-text {
-      visibility: hidden;
-      width: 280px;
-      background-color: #333;
-      color: #fff;
-      text-align: left;
-      border-radius: 6px;
-      padding: 8px;
-      position: absolute;
-      z-index: 1;
-      bottom: 125%;
-      left: 50%;
-      margin-left: -140px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      font-size: 13px;
-      line-height: 1.4;
+      visibility: hidden; width: 280px; background-color: #333; color: #fff; text-align: left;
+      border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%;
+      margin-left: -140px; opacity: 0; transition: opacity 0.3s; font-size: 13px; line-height: 1.4;
     }
-    .tooltip-container:hover .tooltip-text {
-      visibility: visible;
-      opacity: 1;
-    }
+    .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+    /* 복사 알림 (작게) */
+    .small-msg { position: absolute; top: 8px; right: 12px; background:#000; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; display:none; }
   </style>
 </head>
 <body>
 
-<div id="inputSection">
-  <h3>환자 정보 입력</h3>
-  <form id="chatForm">
-    <fieldset>
-      <legend>환자 정보</legend>
+<div class="container">
+  <div id="inputSection">
+    <h3>환자 정보 입력</h3>
+    <form id="chatForm">
+      <fieldset>
+        <legend>환자 정보</legend>
 
-      <label for="age">나이</label>
-      <input type="text" id="age" name="age_id" required />
+        <label for="age">나이</label>
+        <input type="number" id="age" name="age_id" required />
 
-      <label>성별</label>
-      <input type="radio" name="sex_id" value="남" required> 남
-      <input type="radio" name="sex_id" value="여"> 여
+        <label>성별</label>
+        <input type="radio" name="sex_id" value="남" required> 남
+        <input type="radio" name="sex_id" value="여"> 여
 
-      <label for="height">키 (cm)</label>
-      <input type="text" id="height" name="height_id" required />
+        <label for="height">키 (cm)</label>
+        <input type="number" id="height" name="height_id" required />
 
-      <label for="weight">체중 (kg)</label>
-      <input type="text" id="weight" name="weight_id" required />
+        <label for="weight">체중 (kg)</label>
+        <input type="number" id="weight" name="weight_id" required />
 
-      <label for="job">직업</label>
-      <input type="text" id="job" name="job_id" required />
+        <label for="job">직업</label>
+        <input type="text" id="job" name="job_id" required />
 
-      <label for="pain">통증부위</label>
-      <input type="text" id="pain" name="pain_id" required />
+        <label for="pain">통증부위</label>
+        <input type="text" id="pain" name="pain_id" required />
 
-      <label for="painDesc">통증 설명</label>
-      <input type="text" id="painDesc" name="painDesc_id" required />
+        <label for="painDesc">통증 설명</label>
+        <input type="text" id="painDesc" name="painDesc_id" required />
 
-      <label for="stress">스트레스 지수 (상/중/하)</label>
-      <input type="text" id="stress" name="stress_id" required />
+        <label for="stress">스트레스 지수 (상/중/하)</label>
+        <input type="text" id="stress" name="stress_id" required />
 
-      <label for="fatigue">피로도 (상/중/하)</label>
-      <input type="text" id="fatigue" name="fatigue_id" required />
+        <label for="fatigue">피로도 (상/중/하)</label>
+        <input type="text" id="fatigue" name="fatigue_id" required />
 
-      <label>통증 단계 (1단계 ~ 3단계)</label>
-      <div class="tooltip-container">
-      <div class="tooltip-text">
-          <b>1단계</b>: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감<br><br>
-          <b>2단계</b>: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침<br><br>
-          <b>3단계</b>: 휴식시간에도 통증 있음. 하루종일 지속, 불면 및 작업 불가
+        <!-- 심플 툴팁 -->
+        <label for="painLevel">통증 단계 (심플 툴팁)</label>
+        <input 
+          type="text" 
+          id="painLevel" 
+          placeholder="1~3단계" 
+          required
+          title="1단계: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감
+2단계: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침
+3단계: 휴식시간에도 통증 있음. 하루종일 지속, 불면 및 작업 불가"
+        />
+
+        <!-- 커스텀 툴팁 -->
+        <label>통증 단계 (커스텀 툴팁)</label>
+        <div class="tooltip-container">
+          <input type="text" id="painLevelCustom" placeholder="1~3단계" />
+          <div class="tooltip-text">
+            <b>1단계</b>: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감<br><br>
+            <b>2단계</b>: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침<br><br>
+            <b>3단계</b>: 휴식시간에도 통증 있음. 하루종일 지속, 불면 및 작업 불가
+          </div>
+        </div>
+
+        <label for="disease">기존 질환</label>
+        <input type="text" id="disease" name="disease_id" />
+
+        <label for="device">치료기구 사용 여부</label>
+        <input type="text" id="device" name="device_id" />
+
+        <label for="deviceList">보유 기구</label>
+        <input type="text" id="deviceList" name="deviceList_id" />
+
+        <button type="submit">검색 + 요약 + 스트레칭 추천</button>
+        <button type="reset">취소</button>
+      </fieldset>
+    </form>
+  </div>
+
+  <div id="resultSection">
+    <div class="card" id="searchCard">
+      <div class="card-header">
+        <h3 style="margin:0">검색 요약 (Google + GPT)</h3>
       </div>
-        <input type="text" id="painLevel" placeholder="1~3단계" />
-        <div class="tooltip-text">
-          <b>1단계</b>: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감<br><br>
-          <b>2단계</b>: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침<br><br>
-          <b>3단계</b>: 휴식시간에도 통증 있음. 하루종일 지속, 불면 및 작업 불가
+      <div id="searchSummary">검색 요약이 여기에 표시됩니다.</div>
+    </div>
+
+    <div class="card" id="treatmentCard">
+      <div class="card-header">
+        <h3 style="margin:0">운동/스트레칭 단계 (환자 맞춤)</h3>
+        <div style="display:flex; align-items:center;">
+          <button id="copyBtn" class="copy-btn">전체 복사</button>
+          <span id="copyStatus" class="copy-status">복사 완료</span>
         </div>
       </div>
-
-      <label for="disease">기존 질환</label>
-      <input type="text" id="disease" name="disease_id" />
-
-      <label for="device">치료기구 사용 여부</label>
-      <input type="text" id="device" name="device_id" />
-
-      <label for="deviceList">보유 기구</label>
-      <input type="text" id="deviceList" name="deviceList_id" />
-
-      <button type="submit">검색 + 요약 + 운동치료</button>
-      <button type="reset">취소</button>
-    </fieldset>
-  </form>
-</div>
-
-<div id="resultSection">
-  <h3>검색 요약 (Google 검색 + GPT 요약)</h3>
-  <div id="searchSummary">검색 요약이 여기에 표시됩니다.</div>
-  <h3>운동치료 단계 (환자 맞춤)</h3>
-  <div id="treatmentSteps">운동치료 단계가 여기에 표시됩니다.</div>
+      <div id="treatmentSteps">운동치료 단계가 여기에 표시됩니다.</div>
+      <div id="copyMsg" class="small-msg">복사되었습니다</div>
+    </div>
+  </div>
 </div>
 
 <script>
 const form = document.getElementById("chatForm");
+const searchSummaryEl = document.getElementById("searchSummary");
+const treatmentStepsEl = document.getElementById("treatmentSteps");
+const copyBtn = document.getElementById("copyBtn");
+const copyStatus = document.getElementById("copyStatus");
+const copyMsg = document.getElementById("copyMsg");
 
+function showTempMsg(msgEl, duration = 2000) {
+  msgEl.style.display = "inline-block";
+  setTimeout(() => { msgEl.style.display = "none"; }, duration);
+}
+
+// 복사 버튼 기능
+copyBtn.addEventListener("click", async () => {
+  const text = treatmentStepsEl.innerText;
+  if (!text || text.trim() === "" || text.includes("스트레칭 단계가 여기에")) {
+    // 복사할 내용이 없을 때
+    copyStatus.style.color = "red";
+    copyStatus.innerText = "복사할 내용이 없습니다";
+    copyStatus.style.display = "inline";
+    setTimeout(() => { copyStatus.style.display = "none"; copyStatus.style.color = "green"; copyStatus.innerText = "복사 완료"; }, 2000);
+    return;
+  }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // fallback
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    copyStatus.style.color = "green";
+    copyStatus.innerText = "복사 완료";
+    copyStatus.style.display = "inline";
+    // 작은 안내 메시지 카드에 잠깐 표시
+    copyMsg.style.display = "block";
+    setTimeout(() => { copyStatus.style.display = "none"; copyMsg.style.display = "none"; }, 1800);
+  } catch (err) {
+    copyStatus.style.color = "red";
+    copyStatus.innerText = "복사 실패";
+    copyStatus.style.display = "inline";
+    setTimeout(() => { copyStatus.style.display = "none"; }, 2000);
+  }
+});
+
+// 폼 제출 로직 (Google 검색 + GPT 요약 + GPT 스트레칭)
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -133,17 +191,17 @@ form.addEventListener("submit", async (e) => {
   const stress = document.getElementById("stress").value;
   const fatigue = document.getElementById("fatigue").value;
   const painLevel = document.getElementById("painLevel").value || document.getElementById("painLevelCustom").value;
-  const disease = document.getElementById("disease").value;
-  const device = document.getElementById("device").value;
-  const deviceList = document.getElementById("deviceList").value;
+  const disease = document.getElementById("disease").value || "없음";
+  const device = document.getElementById("device").value || "미확인";
+  const deviceList = document.getElementById("deviceList").value || "없음";
 
-  const searchQuery = `${age}세 ${sex}, ${pain} 운동치료 관련 의학 논문 및 스트레칭 정보`;
+  const searchQuery = `${age}세 ${sex} 환자, ${pain} 운동치료 스트레칭 재활 추천`;
 
-  document.getElementById("searchSummary").innerText = "검색 요약 생성 중...";
-  document.getElementById("treatmentSteps").innerText = "운동치료 단계 생성 중...";
+  searchSummaryEl.innerText = "검색 요약 생성 중...";
+  treatmentStepsEl.innerText = "스트레칭 추천 생성 중...";
 
   try {
-    // 1️⃣ Google 검색
+    // 1) Google 검색
     const googleRes = await fetch("/api/googleSearch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -153,8 +211,8 @@ form.addEventListener("submit", async (e) => {
     const items = googleData.items || [];
     const snippets = items.map(item => `${item.title}\n${item.snippet}`).join("\n\n");
 
-    // 2️⃣ GPT 요약: Google 검색 결과 요약
-    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 운동치료와 관련된 정보만 정리해줘:\n\n${snippets}`;
+    // 2) GPT 요약(검색결과 요약)
+    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 근골격계 환자의 운동/재활/스트레칭과 관련된 정보만 정리해줘:\n\n${snippets}`;
     const summaryRes = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -162,12 +220,12 @@ form.addEventListener("submit", async (e) => {
     });
     const summaryData = await summaryRes.json();
     const summaryText = summaryData.choices?.[0]?.message?.content || "검색 요약이 없습니다.";
-    document.getElementById("searchSummary").innerText = summaryText;
+    searchSummaryEl.innerText = summaryText;
 
-    // 3️⃣ GPT 운동치료: 환자 맞춤 단계별 플랜
+    // 3) GPT 스트레칭/운동치료 추천 (의학적 근거 포함)
     const treatmentPrompt = `너는 정형외과, 재활의학과, 통증의학과, 류마티스내과에서 근무하는 25년차 의사야. 
-환자에게 적합한 스트레칭을 의학적 근거와 출처를 포함해 20분 이하 2주 플랜으로 설명해줘. 
-또, 해서는 안 될 행동과 경고도 반드시 포함해줘.
+근골격계 질환 환자에게 아래 정보를 바탕으로 스트레칭 방법을 의학적 근거 및 출처와 함께 알려줘. 
+스트레칭은 20분 이하, 2주 플랜으로 작성하고, 하지 말아야 할 행동과 경고를 반드시 포함해줘.
 
 환자 정보:
 - 성별: ${sex}
@@ -181,24 +239,30 @@ form.addEventListener("submit", async (e) => {
 - 통증 단계: ${painLevel}
 - 기존 질환: ${disease}
 - 치료기구 사용 여부: ${device}
-- 보유 기구: ${deviceList}`;
+- 보유 기구: ${deviceList}
 
+위 정보를 바탕으로:
+1) 2주(매일 또는 격일 포함) 내 실행 가능한 '20분 이하' 스트레칭 루틴을 단계별로 구체적으로 작성하라.
+2) 각 스트레칭마다 목적, 실시 방법, 횟수/시간, 주의사항을 명확히 기술하라.
+3) 가능한 한 의학적 근거(논문/가이드라인/학회 권고 등)와 출처를 함께 제시하라.
+4) 통증을 악화시킬 수 있는 행동(금기)과 즉시 중단해야 하는 징후를 명확히 적어라.
+5) 사용자의 반응(통증 악화, 새로운 통증 등)에 따라 다음 추천을 어떻게 바꿀지 간단한 안내도 포함하라.`;
+    
     const treatmentRes = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: treatmentPrompt })
     });
     const treatmentData = await treatmentRes.json();
-    const treatmentText = treatmentData.choices?.[0]?.message?.content || "운동치료 단계가 없습니다.";
-    document.getElementById("treatmentSteps").innerText = treatmentText;
+    const treatmentText = treatmentData.choices?.[0]?.message?.content || "스트레칭 단계가 없습니다.";
+    treatmentStepsEl.innerText = treatmentText;
 
   } catch (err) {
-    document.getElementById("searchSummary").innerText = "검색 요약 에러: " + err;
-    document.getElementById("treatmentSteps").innerText = "운동치료 단계 에러: " + err;
+    searchSummaryEl.innerText = "검색 요약 에러: " + err;
+    treatmentStepsEl.innerText = "스트레칭 추천 에러: " + err;
   }
 });
 </script>
 
 </body>
 </html>
-
