@@ -156,7 +156,7 @@ form.addEventListener("submit", async (e) => {
 11. 기존 질환: ${existing}
 12. 기구 사용 여부: ${equipment}
 13. 기구 종류: ${equipmentDetail}
-14. 기타: ${extra}
+14. 기타 정보 및 통증 심화 부: ${extra}
 `;
 
     const treatmentRes = await fetch("/api/chat", {
@@ -177,5 +177,6 @@ form.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
