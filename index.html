@@ -87,6 +87,9 @@
         <label for="deviceList">보유 기구</label>
         <input type="text" id="deviceList" name="deviceList_id" placeholder="폼롤러 등" />
 
+        <label for="extra">기타 및 통증 심화 부위</label>
+        <input type="text" id="extra" name="extra_id" placeholder="발목 통증 심화 등" />
+
         <button type="submit">검색 + 요약 + 스트레칭 추천</button>
         <button type="reset">취소</button>
       </fieldset>
@@ -255,6 +258,7 @@ form.addEventListener("submit", async (e) => {
 - 기존 질환: ${disease}
 - 치료기구 사용 여부: ${device}
 - 보유 기구: ${deviceList}
+- 기타 사항 및 통증 심화 부위: ${extra}
 
 위 정보를 바탕으로:
 1) 2주(매일 또는 격일 포함) 내 실행 가능한 '20분 이하' 스트레칭 루틴을 단계별로 구체적으로 작성하라.
@@ -287,4 +291,5 @@ form.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
