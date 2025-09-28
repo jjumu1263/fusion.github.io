@@ -2,92 +2,114 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>근골격계 환자 스트레칭 추천</title>
+  <title>운동치료 + 검색 요약</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    .container { display: flex; gap: 20px; }
+    body { font-family: Arial; margin: 20px; display: flex; }
     #inputSection { width: 40%; }
-    #resultSection { width: 55%; display: flex; flex-direction: column; gap: 15px; }
+    #resultSection { width: 55%; margin-left: 5%; }
     fieldset { padding: 15px; }
     label { display: block; margin-top: 10px; }
-    input[type="text"], input[type="number"] { width: 95%; padding: 5px; }
+    input[type="text"] { width: 95%; padding: 5px; }
     button { margin-top: 15px; padding: 8px 15px; }
-    .card { padding: 15px; border: 1px solid #ccc; border-radius: 10px; white-space: pre-line; max-height: 350px; overflow-y: auto; }
+    #searchSummary, #treatmentSteps { margin-top: 10px; padding: 10px; border: 1px solid #ccc; white-space: pre-line; }
     h3 { margin-bottom: 5px; }
+
+    /* ✅ 커스텀 툴팁 스타일 */
+    .tooltip-container {
+      position: relative;
+      display: inline-block;
+      width: 95%;
+    }
+    .tooltip-container .tooltip-text {
+      visibility: hidden;
+      width: 280px;
+      background-color: #333;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -140px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .tooltip-container:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div id="inputSection">
-    <h3>환자 정보 입력</h3>
-    <form id="chatForm">
-      <fieldset>
-        <legend>환자 정보</legend>
+<div id="inputSection">
+  <h3>환자 정보 입력</h3>
+  <form id="chatForm">
+    <fieldset>
+      <legend>환자 정보</legend>
 
-        <label for="age">나이</label>
-        <input type="number" id="age" name="age" required />
+      <label for="age">나이</label>
+      <input type="text" id="age" name="age_id" required />
 
-        <label>성별</label>
-        <input type="radio" name="sex" value="남" required> 남
-        <input type="radio" name="sex" value="여"> 여
+      <label>성별</label>
+      <input type="radio" name="sex_id" value="남" required> 남
+      <input type="radio" name="sex_id" value="여"> 여
 
-        <label for="height">키 (cm)</label>
-        <input type="number" id="height" required />
+      <label for="height">키 (cm)</label>
+      <input type="text" id="height" name="height_id" required />
 
-        <label for="weight">체중 (kg)</label>
-        <input type="number" id="weight" required />
+      <label for="weight">체중 (kg)</label>
+      <input type="text" id="weight" name="weight_id" required />
 
-        <label for="job">직업</label>
-        <input type="text" id="job" placeholder="예: 사무직, 교사 등" required />
+      <label for="job">직업</label>
+      <input type="text" id="job" name="job_id" required />
 
-        <label for="pain">통증 부위 및 질병명</label>
-        <input type="text" id="pain" required />
+      <label for="pain">통증부위</label>
+      <input type="text" id="pain" name="pain_id" required />
 
-        <label for="painDesc">통증 양상</label>
-        <input type="text" id="painDesc" placeholder="예: 뻐근함, 욱신거림" required />
+      <label for="painDesc">통증 설명</label>
+      <input type="text" id="painDesc" name="painDesc_id" required />
 
-        <label for="stress">스트레스 지수</label>
-        <input type="text" id="stress" placeholder="상, 중, 하" required />
+      <label for="stress">스트레스 지수 (상/중/하)</label>
+      <input type="text" id="stress" name="stress_id" required />
 
-        <label for="fatigue">피로도</label>
-        <input type="text" id="fatigue" placeholder="상, 중, 하" required />
+      <label for="fatigue">피로도 (상/중/하)</label>
+      <input type="text" id="fatigue" name="fatigue_id" required />
 
-        <label for="painLevel"><h2 title = <pre> "1단계 : 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업중 약간의 통증과 피로감
-2단계 : 작업 초기부터 통증이 발생하고, 하룻밤이 지나도 통증이 지속됨. 통증 부위가 화끈거려 잠을 설침. 
-3단계 : 휴식시간에도 통증이 있음. 하루종일 통증이 있어 불면에 시달림. 작업 이외의 다른 일도 수행이 어려움. ">통증 단계</label>
-        <input type="text" id="painLevel" placeholder="1단계~3단계" required />
+      <label>통증 단계 (1단계 ~ 3단계)</label>
+      <div class="tooltip-container">
+        <input type="text" id="painLevel" placeholder="1~3단계" />
+        <div class="tooltip-text">
+          <b>1단계</b>: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감<br><br>
+          <b>2단계</b>: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침<br><br>
+          <b>3단계</b>: 휴식시간에도 통증 있음. 하루종일 지속, 불면 및 작업 불가
+        </div>
+      </div>
 
-        <label for="existing">기존 질환</label>
-        <input type="text" id="existing" placeholder="예: 고혈압, 허리디스크" />
+      <label for="disease">기존 질환</label>
+      <input type="text" id="disease" name="disease_id" />
 
-        <label>기구 사용 치료 여부</label>
-        <input type="radio" name="equipment" value="사용" required> 사용
-        <input type="radio" name="equipment" value="미사용"> 미사용
+      <label for="device">치료기구 사용 여부</label>
+      <input type="text" id="device" name="device_id" />
 
-        <label for="equipmentDetail">사용 기구</label>
-        <input type="text" id="equipmentDetail" placeholder="예: 탄력밴드, 폼롤러" />
+      <label for="deviceList">보유 기구</label>
+      <input type="text" id="deviceList" name="deviceList_id" />
 
-        <label for="extra">기타 및 통증 심화 부위</label>
-        <input type="text" id="extra" placeholder="예:실내/실외, 스트레칭 후 통증 부위" />
+      <button type="submit">검색 + 요약 + 운동치료</button>
+      <button type="reset">취소</button>
+    </fieldset>
+  </form>
+</div>
 
-        <button type="submit">검색 + 요약 + 스트레칭 추천</button>
-        <button type="reset">취소</button>
-      </fieldset>
-    </form>
-  </div>
-
-  <div id="resultSection">
-    <div class="card">
-      <h3>검색 요약 (Google + GPT)</h3>
-      <div id="searchSummary">검색 요약이 여기에 표시됩니다.</div>
-    </div>
-
-    <div class="card">
-      <h3>운동/스트레칭 단계</h3>
-      <div id="treatmentSteps">운동치료 단계가 여기에 표시됩니다.</div>
-    </div>
-  </div>
+<div id="resultSection">
+  <h3>검색 요약 (Google 검색 + GPT 요약)</h3>
+  <div id="searchSummary">검색 요약이 여기에 표시됩니다.</div>
+  <h3>운동치료 단계 (환자 맞춤)</h3>
+  <div id="treatmentSteps">운동치료 단계가 여기에 표시됩니다.</div>
 </div>
 
 <script>
@@ -96,8 +118,8 @@ const form = document.getElementById("chatForm");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const sex = document.querySelector('input[name="sex_id"]:checked')?.value;
   const age = document.getElementById("age").value;
-  const sex = document.querySelector('input[name="sex"]:checked')?.value;
   const height = document.getElementById("height").value;
   const weight = document.getElementById("weight").value;
   const job = document.getElementById("job").value;
@@ -105,16 +127,15 @@ form.addEventListener("submit", async (e) => {
   const painDesc = document.getElementById("painDesc").value;
   const stress = document.getElementById("stress").value;
   const fatigue = document.getElementById("fatigue").value;
-  const painLevel = document.getElementById("painLevel").value;
-  const existing = document.getElementById("existing").value || "없음";
-  const equipment = document.querySelector('input[name="equipment"]:checked')?.value;
-  const equipmentDetail = document.getElementById("equipmentDetail").value || "없음";
-  const extra = document.getElementById("extra").value || "없음";
+  const painLevel = document.getElementById("painLevel").value || document.getElementById("painLevelCustom").value;
+  const disease = document.getElementById("disease").value;
+  const device = document.getElementById("device").value;
+  const deviceList = document.getElementById("deviceList").value;
 
-  const searchQuery = `${pain} 운동치료, 스트레칭, 재활`;
+  const searchQuery = `${age}세 ${sex}, ${pain} 운동치료 관련 의학 논문 및 스트레칭 정보`;
 
   document.getElementById("searchSummary").innerText = "검색 요약 생성 중...";
-  document.getElementById("treatmentSteps").innerText = "스트레칭 추천 생성 중...";
+  document.getElementById("treatmentSteps").innerText = "운동치료 단계 생성 중...";
 
   try {
     // 1️⃣ Google 검색
@@ -127,8 +148,8 @@ form.addEventListener("submit", async (e) => {
     const items = googleData.items || [];
     const snippets = items.map(item => `${item.title}\n${item.snippet}`).join("\n\n");
 
-    // 2️⃣ GPT 요약: Google 검색 결과
-    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 환자의 근골격계 운동치료와 관련된 정보만 정리해줘:\n\n${snippets}`;
+    // 2️⃣ GPT 요약: Google 검색 결과 요약
+    const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 운동치료와 관련된 정보만 정리해줘:\n\n${snippets}`;
     const summaryRes = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -138,28 +159,24 @@ form.addEventListener("submit", async (e) => {
     const summaryText = summaryData.choices?.[0]?.message?.content || "검색 요약이 없습니다.";
     document.getElementById("searchSummary").innerText = summaryText;
 
-    // 3️⃣ GPT 운동/스트레칭 추천 (의학적 근거 포함)
-    const treatmentPrompt = `
-너는 정형외과, 재활의학과, 통증의학과, 류마티스내과에서 근무하는 25년차 의사야. 
-근골격계 질환 환자에게 아래 정보를 바탕으로 스트레칭 방법을 의학적 근거와 출처와 함께 알려줘. 
-스트레칭은 20분 이하, 2주 플랜으로 작성하고, 하지 말아야 할 행동과 통증 경고를 다른 정보들보다 먼저 알려줘.
-답변 생성할 때는 n주차를 명시하여 구분해서 써줘. ex : 1주차, 2주차
-질문:
-1. 성별: ${sex}
-2. 나이: ${age}
-3. 키: ${height}cm
-4. 체중: ${weight}kg
-5. 직업: ${job}
-6. 통증 부위: ${pain}
-7. 통증 양상: ${painDesc}
-8. 스트레스 지수: ${stress}
-9. 피로도: ${fatigue}
-10. 통증 단계: ${painLevel}
-11. 기존 질환: ${existing}
-12. 기구 사용 여부: ${equipment}
-13. 기구 종류: ${equipmentDetail}
-14. 기타 정보 및 통증 심화 부위: ${extra}
-`;
+    // 3️⃣ GPT 운동치료: 환자 맞춤 단계별 플랜
+    const treatmentPrompt = `너는 정형외과, 재활의학과, 통증의학과, 류마티스내과에서 근무하는 25년차 의사야. 
+환자에게 적합한 스트레칭을 의학적 근거와 출처를 포함해 20분 이하 2주 플랜으로 설명해줘. 
+또, 해서는 안 될 행동과 경고도 반드시 포함해줘.
+
+환자 정보:
+- 성별: ${sex}
+- 나이: ${age}
+- 키/체중: ${height}cm / ${weight}kg
+- 직업: ${job}
+- 통증부위: ${pain}
+- 통증 설명: ${painDesc}
+- 스트레스: ${stress}
+- 피로도: ${fatigue}
+- 통증 단계: ${painLevel}
+- 기존 질환: ${disease}
+- 치료기구 사용 여부: ${device}
+- 보유 기구: ${deviceList}`;
 
     const treatmentRes = await fetch("/api/chat", {
       method: "POST",
@@ -167,23 +184,15 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ prompt: treatmentPrompt })
     });
     const treatmentData = await treatmentRes.json();
-    const treatmentText = treatmentData.choices?.[0]?.message?.content || "스트레칭 단계가 없습니다.";
+    const treatmentText = treatmentData.choices?.[0]?.message?.content || "운동치료 단계가 없습니다.";
     document.getElementById("treatmentSteps").innerText = treatmentText;
 
   } catch (err) {
     document.getElementById("searchSummary").innerText = "검색 요약 에러: " + err;
-    document.getElementById("treatmentSteps").innerText = "스트레칭 추천 에러: " + err;
+    document.getElementById("treatmentSteps").innerText = "운동치료 단계 에러: " + err;
   }
 });
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
