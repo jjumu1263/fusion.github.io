@@ -65,23 +65,10 @@
 
         <label for="fatigue">피로도 (상/중/하)</label>
         <input type="text" id="fatigue" name="fatigue_id" required />
-
-        <!-- 심플 툴팁 -->
-        <label for="painLevel">통증 단계 (심플 툴팁)</label>
-        <input 
-          type="text" 
-          id="painLevel" 
-          placeholder="1~3단계" 
-          required
-          title="1단계: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감
-2단계: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침
-3단계: 휴식시간에도 통증 있음. 하루종일 지속, 불면 및 작업 불가"
-        />
-
-        <!-- 커스텀 툴팁 -->
-        <label>통증 단계 (커스텀 툴팁)</label>
+        
+        <label>통증 단계 (1 ~ 3단계)</label>
         <div class="tooltip-container">
-          <input type="text" id="painLevelCustom" placeholder="1~3단계" />
+          <input type="text" id="painLevelCustom" placeholder="1 ~ 3단계" />
           <div class="tooltip-text">
             <b>1단계</b>: 하룻밤이 지나면 증상이 일시적으로 사라짐. 작업 중 약간의 통증과 피로감<br><br>
             <b>2단계</b>: 작업 초기부터 통증 발생, 하룻밤이 지나도 지속됨. 부위가 화끈거려 잠 설침<br><br>
@@ -90,13 +77,13 @@
         </div>
 
         <label for="disease">기존 질환</label>
-        <input type="text" id="disease" name="disease_id" />
+        <input type="text" id="disease" name="disease_id" placeholder="허리디스크, 류마티스 관절염 등" />
 
         <label for="device">치료기구 사용 여부</label>
         <input type="text" id="device" name="device_id" />
 
         <label for="deviceList">보유 기구</label>
-        <input type="text" id="deviceList" name="deviceList_id" />
+        <input type="text" id="deviceList" name="deviceList_id" placeholder="폼롤러 등" />
 
         <button type="submit">검색 + 요약 + 스트레칭 추천</button>
         <button type="reset">취소</button>
@@ -266,3 +253,4 @@ form.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
