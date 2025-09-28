@@ -66,6 +66,9 @@
         <label for="equipmentDetail">사용 기구</label>
         <input type="text" id="equipmentDetail" placeholder="예: 탄력밴드, 폼롤러" />
 
+        <label for="extra">기타</label>
+        <input type="text" id="extra" placeholder="예:실내/실외, 스트레칭 후 통증 부위" />
+
         <button type="submit">검색 + 요약 + 스트레칭 추천</button>
         <button type="reset">취소</button>
       </fieldset>
@@ -104,6 +107,7 @@ form.addEventListener("submit", async (e) => {
   const existing = document.getElementById("existing").value || "없음";
   const equipment = document.querySelector('input[name="equipment"]:checked')?.value;
   const equipmentDetail = document.getElementById("equipmentDetail").value || "없음";
+  const extra = document.getElementById("extra").value || "없음";
 
   const searchQuery = `${pain} 운동치료, 스트레칭, 재활`;
 
@@ -151,6 +155,7 @@ form.addEventListener("submit", async (e) => {
 11. 기존 질환: ${existing}
 12. 기구 사용 여부: ${equipment}
 13. 기구 종류: ${equipmentDetail}
+14. 기타: ${extra}
 `;
 
     const treatmentRes = await fetch("/api/chat", {
