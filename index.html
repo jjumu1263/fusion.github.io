@@ -81,7 +81,8 @@
         <input type="text" id="disease" name="disease_id" placeholder="허리디스크, 류마티스 관절염 등" />
 
         <label for="device">치료기구 사용 여부</label>
-        <input type="text" id="device" name="device_id" />
+        <input type="radio" name="device_id" value="사용" required />사용
+        <input type="radio" name="device_id" value="사용안함" required /> 사용안함
 
         <label for="deviceList">보유 기구</label>
         <input type="text" id="deviceList" name="deviceList_id" placeholder="폼롤러 등" />
@@ -239,7 +240,7 @@ form.addEventListener("submit", async (e) => {
     // 3) GPT 스트레칭/운동치료 추천 (의학적 근거 포함)
     const treatmentPrompt = `너는 정형외과, 재활의학과, 통증의학과, 류마티스내과에서 근무하는 25년차 의사야. 
 근골격계 질환 환자에게 아래 정보를 바탕으로 스트레칭 방법을 의학적 근거 및 출처와 함께 알려줘. 
-스트레칭은 20분 이하, 2주 플랜으로 작성하고, 하지 말아야 할 행동과 경고를 반드시 포함해줘.
+스트레칭은 20분 이하, 2주 플랜으로 작성하고, 하지 말아야 할 행동과 경고를 반드시 스트레칭 추천 이전에 명시해줘.
 
 환자 정보:
 - 성별: ${sex}
@@ -286,3 +287,4 @@ form.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
