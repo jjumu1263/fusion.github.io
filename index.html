@@ -17,7 +17,6 @@
     .copy-btn { font-size: 14px; padding: 6px 10px; }
     .copy-status { font-size: 13px; color: green; margin-left: 8px; display: none; }
     h3 { margin-bottom: 5px; }
-    /* 툴팁 스타일 */
     .tooltip-container { position: relative; display: inline-block; width: 95%; }
     .tooltip-container .tooltip-text {
       visibility: hidden; width: 280px; background-color: #333; color: #fff; text-align: left;
@@ -25,7 +24,6 @@
       margin-left: -140px; opacity: 0; transition: opacity 0.3s; font-size: 13px; line-height: 1.4;
     }
     .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
-    /* 복사 알림 (작게) */
     .small-msg { position: absolute; top: 8px; right: 12px; background:#000; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; display:none; }
     .error { color: red; white-space: normal; }
   </style>
@@ -119,16 +117,10 @@
 </div>
 
 <script>
-/*
-  주의: 아래 API_BASE 설정을 실제 환경에 맞게 바꿔주세요.
-  - Vercel에서 이 HTML을 호스팅하면 API_BASE='' (상대경로)로 동작합니다.
-  - GitHub Pages나 로컬에서 페이지를 띄우면 자동으로 Vercel 도메인을 사용합니다.
-*/
+  
 const API_BASE = (function(){
-  // 자동 탐지: 로컬/버셀 환경이면 상대경로 사용, 그 외(예: github.io)면 Vercel URL 입력
   const host = window.location.hostname;
   if (host.includes('vercel.app') || host === 'localhost' || host === '127.0.0.1') return '';
-  // *** 여기를 본인 Vercel 프로젝트 도메인으로 바꿔주세요 ***
   return 'https://YOUR-VERCEL-PROJECT.vercel.app';
 })();
 
@@ -144,7 +136,6 @@ function showTempMsg(msgEl, duration = 2000) {
   setTimeout(() => { msgEl.style.display = "none"; }, duration);
 }
 
-// 복사 버튼 기능 (unchanged)
 copyBtn.addEventListener("click", async () => {
   const text = treatmentStepsEl.innerText;
   if (!text || text.trim() === "" || text.includes("스트레칭 단계가 여기에")) {
@@ -180,11 +171,9 @@ copyBtn.addEventListener("click", async () => {
   }
 });
 
-// 폼 제출 로직 (디버깅 로그와 응답 상태 체크 포함)
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // 안전하게 요소 읽기 (null 체크)
   const sex = document.querySelector('input[name="sex_id"]:checked')?.value || '';
   const age = document.getElementById("age")?.value || '';
   const height = document.getElementById("height")?.value || '';
@@ -194,7 +183,6 @@ form.addEventListener("submit", async (e) => {
   const painDesc = document.getElementById("painDesc")?.value || '';
   const stress = document.getElementById("stress")?.value || '';
   const fatigue = document.getElementById("fatigue")?.value || '';
-  // painLevel 요소는 예전 코드와 달라지면 null일 수 있으니 두개 모두 체크
   const painLevelEl = document.getElementById("painLevel");
   const painLevelCustomEl = document.getElementById("painLevelCustom");
   const painLevel = (painLevelEl && painLevelEl.value.trim()) ? painLevelEl.value.trim() : ((painLevelCustomEl && painLevelCustomEl.value.trim()) ? painLevelCustomEl.value.trim() : '');
@@ -210,7 +198,6 @@ form.addEventListener("submit", async (e) => {
   treatmentStepsEl.innerText = "스트레칭 추천 생성 중...";
 
   try {
-    // 1) Google 검색
     const googleRes = await fetch(`${API_BASE}/api/googleSearch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -225,7 +212,6 @@ form.addEventListener("submit", async (e) => {
     const snippets = items.map(item => `${item.title}\n${item.snippet}`).join("\n\n");
     console.log("google snippets:", snippets);
 
-    // 2) GPT 요약(검색결과 요약)
     const summaryPrompt = `다음 Google 검색 결과를 한국어로 요약하고, 근골격계 환자의 운동/재활/스트레칭과 관련된 정보만 정리해줘:\n\n${snippets}`;
     const summaryRes = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
@@ -240,7 +226,6 @@ form.addEventListener("submit", async (e) => {
     const summaryText = summaryData.choices?.[0]?.message?.content || "검색 요약이 없습니다.";
     searchSummaryEl.innerText = summaryText;
 
-    // 3) GPT 스트레칭/운동치료 추천 (의학적 근거 포함)
     const treatmentPrompt = `너는 정형외과, 재활의학과, 통증의학과, 류마티스내과에서 근무하는 25년차 의사야. 
 근골격계 질환 환자에게 아래 정보를 바탕으로 스트레칭 방법을 의학적 근거 및 출처와 함께 알려줘. 
 스트레칭은 휴식시간을 포함하여 매일 20분 초과, 2주 플랜으로 작성하고, 하지 말아야 할 행동과 경고를 반드시 스트레칭 추천 이전에 명시해줘.
@@ -284,7 +269,6 @@ form.addEventListener("submit", async (e) => {
 
   } catch (err) {
     console.error("처리 중 에러:", err);
-    // 화면에 친절하게 표시
     searchSummaryEl.innerHTML = `<span class="error">검색 요약 에러: ${err.message || err}</span>`;
     treatmentStepsEl.innerHTML = `<span class="error">스트레칭 추천 에러: ${err.message || err}</span>`;
   }
@@ -293,11 +277,3 @@ form.addEventListener("submit", async (e) => {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
